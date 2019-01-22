@@ -10,6 +10,11 @@ public class Pair<T1, T2> {
         this.y = y;
     }
 
+    @Override
+    public String toString() {
+        return String.format("(%s,%s)",getX(),getY());
+    }
+
     public T1 getX() {
         return this.x;
     }
