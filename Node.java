@@ -7,11 +7,12 @@ public class Node<T>{
   private final int NUMBER_OF_TASKS = 8;
 
   //variables
-  private T key;
+  private T key; // task
   private Node parent;
   private LinkedList<Node> children;
   private int pathcost;
   private int cost;
+  private int depth; //machine
   private Boolean [] assigned = new Boolean[NUMBER_OF_TASKS];
 
   public Node(T key, Node parent, LinkedList<Node> children, int cost, int pathcost, Boolean[] assigned){
@@ -20,7 +21,8 @@ public class Node<T>{
     this.children = children;
     this.cost = cost;
     this.pathcost = pathcost;
-    this.assigned = assigned; 
+    this.assigned = assigned;
+    this.depth = (this.parent == null) ? 0 : this.parent.getDepth() + 1;
   }
 
   public T getKey(){
@@ -45,5 +47,9 @@ public class Node<T>{
 
   public Boolean[] getAssigned(){
     return this.assigned;
+  }
+
+  public int getDepth(){
+    return this.depth;
   }
 }
