@@ -4,16 +4,16 @@ import java.util.LinkedList;
 public class Node{
 
   //constants
-  private final int NUMBER_OF_TASKS = 8;
+  private final int NUMBER_OF_TASKS_MACHINES = 8;
 
   //variables
-  private int key; // task. (0-A,1-B etc.)
+  private int key; // task. (1-A,2-B etc.)
   private Node parent;
   private LinkedList<Node> children;
   private int pathcost;
-  private int cost;
+  private int cost; //cost of assignment (least promising)
   private int depth; //machine
-  private Boolean [] assigned = new Boolean[NUMBER_OF_TASKS];
+  private Boolean [] assigned = new Boolean[NUMBER_OF_TASKS_MACHINES];
 
   public Node(int key, Node parent, LinkedList<Node> children, int cost, Boolean[] assigned){
     this.key = key;
@@ -23,7 +23,7 @@ public class Node{
     this.pathcost = (this.parent == null) ? cost : cost + parent.getPathCost();
     this.depth = (this.parent == null) ? 0 : this.parent.getDepth() + 1;
 
-    for (int i = 0; i< NUMBER_OF_TASKS; i++ ){
+    for (int i = 0; i< NUMBER_OF_TASKS_MACHINES; i++ ){
       this.assigned[i] = assigned[i];
     }
 
