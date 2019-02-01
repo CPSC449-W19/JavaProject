@@ -7,31 +7,29 @@ public class Node{
   private final int NUMBER_OF_TASKS_MACHINES = 8;
 
   //variables
-  private int key; // task. (1-A,2-B etc.)
+  private Pair<Integer,String> assignment; //x = machine, y = task
   private Node parent;
   private LinkedList<Node> children;
   private int pathcost;
-  private int cost; //cost of assignment (least promising)
-  private int depth; //machine
+  private int cost; //cost of assignment
   private Boolean [] assigned = new Boolean[NUMBER_OF_TASKS_MACHINES];
 
-  public Node(int key, Node parent, LinkedList<Node> children, int cost, Boolean[] assigned){
-    this.key = key;
+  public Node(Pair<Integer,String> assignment, Node parent, LinkedList<Node> children, int cost, Boolean[] assigned){
+    this.assignment = assignment;
     this.parent = parent;
     this.children = children;
     this.cost = cost;
     this.pathcost = (this.parent == null) ? cost : cost + parent.getPathCost();
-    this.depth = (this.parent == null) ? 0 : this.parent.getDepth() + 1;
 
     for (int i = 0; i< NUMBER_OF_TASKS_MACHINES; i++ ){
       this.assigned[i] = assigned[i];
     }
 
-    this.assigned[key-1] = true;
+    //need to set correct assigned to true
   }
 
-  public int getKey(){
-    return this.key;
+  public int getAssignment(){
+    return this.assignment;
   }
 
   public Node getParent(){
@@ -54,7 +52,4 @@ public class Node{
     return this.assigned;
   }
 
-  public int getDepth(){
-    return this.depth;
-  }
 }
