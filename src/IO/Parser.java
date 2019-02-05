@@ -43,7 +43,7 @@ public class Parser {
      */
     public Parser(String fileName, boolean debug) {
         this.fileName = fileName;
-        this.debug = false;
+        this.debug = true;
         debug("Debugging Parser");
         debug(String.format("File Name Attribute Assigned As - %s", this.fileName));
         debug(String.format("Initializing Parser To Read - %s", fileName));
@@ -110,9 +110,15 @@ public class Parser {
         String[] temps;
         while (fileRead.hasNext() && !fileRead.hasNext(SECTION)) {
             temp = fileRead.next().trim();
-            if (temp.matches("[(][1-8],[A-H][)]")) {
+            if (temp.matches("[(]\\S+,\\S+[)]")) {
                 temps = temp.substring(1,temp.length()-1).split(",");
                 debug(String.format("Read Forced Partial Assignment - %s",temp));
+                if (!temps[0].matches("[1-8]") || !temps[1].matches("[A-H]"))
+                    throw new Exception("invalid machine/task");
+                for (Pair<Integer,String> entity : forcedPartialAssignments)
+                    if (entity.getX() == Integer.parseInt(temps[0]) || entity.getY().equals(temps[1]))
+                        throw new Exception("partial assignment error");
+                // the thing is in the thing twics
                 forcedPartialAssignments.add(new Pair<>(Integer.parseInt(temps[0]),temps[1]));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Invalid Machine/Task Exception From Forced Partial Assignments - %s",temp));
@@ -206,9 +212,7 @@ public class Parser {
     }
 
     private void debug(String message) {
-        if (isDebug()) {
-            System.out.println("Parser Debug Message: " + message);
-        }
+        if (isDebug()) System.err.println("Parser Debug Message: " + message);
     }
 
     public String getFileName() {
