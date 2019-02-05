@@ -12,7 +12,7 @@ public class Pair<T1, T2> {
 
     @Override
     public String toString() {
-        return String.format("(%s,%s)",getX(),getY());
+        return String.format("[%s, %s]",getX(),getY());
     }
 
     public T1 getX() {

@@ -2,16 +2,13 @@ package IO;
 
 // library imports
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.io.File;
-import java.util.logging.*;
 import java.util.regex.Pattern;
 
 // package imports
-import Exception.*;
 import Structure.Pair;
 
 /**
@@ -23,8 +20,6 @@ import Structure.Pair;
  */
 
 public class Parser {
-
-    private final static Logger LOGGER = Logger.getLogger(Parser.class.getName());
 
     // constants
     private final String fileName;
@@ -47,23 +42,6 @@ public class Parser {
      * @param debug the debug flag status determines whether or not to print debug messages
      */
     public Parser(String fileName, boolean debug) {
-        LogManager.getLogManager().reset();
-        LOGGER.setLevel(Level.ALL);
-
-        ConsoleHandler consoleHandler = new ConsoleHandler();
-        consoleHandler.setLevel(Level.FINER);
-        LOGGER.addHandler(consoleHandler);
-
-        LOGGER.severe("severe");
-        LOGGER.warning("warning");
-        LOGGER.info("info");
-        LOGGER.config("config");
-        LOGGER.fine("fine");
-        LOGGER.finer("finer");
-        LOGGER.finest("finest");
-        LOGGER.entering("s","a");
-        LOGGER.exiting("s","a");
-
         this.fileName = fileName;
         this.debug = false;
         debug("Debugging Parser");
@@ -73,9 +51,7 @@ public class Parser {
     }
 
     private void initialize() {
-
-        LOGGER.entering(getClass().getName(),new Object(){}.getClass().getEnclosingMethod().getName());
-
+        
         Scanner fileRead;
         String lineRead;
 
@@ -93,7 +69,7 @@ public class Parser {
                     case "too-near tasks:": readTooNearTasks(fileRead); break;
                     case "machine penalties:": readMachinePenalties(fileRead); break;
                     case "too-near penalities": readTooNearPenalties(fileRead); break;
-                    default: if (!lineRead.isEmpty()) throw new ParsingInputException("Error while parsing input file");
+                    default: if (!lineRead.isEmpty()) throw new Exception("Error while parsing input file");
                 }
             }
             fileRead.close();
@@ -106,7 +82,7 @@ public class Parser {
         }
     }
 
-    private void readName(Scanner fileRead) throws ParsingInputException {
+    private void readName(Scanner fileRead) throws Exception {
         debug("Reading Section - Name");
         Pattern namePattern = Pattern.compile("[\\s]*[\\S]+[\\s]*");
         String temp = "";
@@ -116,7 +92,7 @@ public class Parser {
             name = temp;
         } else {
             debug(String.format("Throwing Exception From Name - %s", temp));
-            throw new ParsingInputException("Error while parsing input file");
+            throw new Exception("Error while parsing input file");
         }
         debug(String.format("Assigned Name - %s", name));
     }
@@ -125,10 +101,9 @@ public class Parser {
      * Add Stuff for checking partial assignment error,
      * Also Check the InvalidMachineTaskException
      * @param fileRead
-     * @throws PartialAssignmentException
-     * @throws InvalidMachineTaskException
+     * @throws Exception
      */
-    private void readForcedPartialAssignments(Scanner fileRead) throws PartialAssignmentException, InvalidMachineTaskException {
+    private void readForcedPartialAssignments(Scanner fileRead) throws Exception {
         debug("Reading Section - Forced Partial Assignments");
         forcedPartialAssignments = new LinkedList<>();
         String temp;
@@ -141,13 +116,13 @@ public class Parser {
                 forcedPartialAssignments.add(new Pair<>(Integer.parseInt(temps[0]),temps[1]));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Invalid Machine/Task Exception From Forced Partial Assignments - %s",temp));
-                throw new InvalidMachineTaskException("invalid machine/task");
+                throw new Exception("invalid machine/task");
             }
         }
         debug(String.format("Assigned Forced Partial Assignments - %s",forcedPartialAssignments));
     }
 
-    private void readForbiddenMachines(Scanner fileRead) throws InvalidInputException {
+    private void readForbiddenMachines(Scanner fileRead) throws Exception {
         debug("Reading Section - Forbidden Machines");
         forbiddenMachines = new LinkedList<>();
         String temp;
@@ -160,13 +135,13 @@ public class Parser {
                 forbiddenMachines.add(new Pair<>(Integer.parseInt(temps[0]),temps[1]));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Forbidden Machines - %s",temp));
-                throw new InvalidInputException("Some Error Happened");
+                throw new Exception("Some Error Happened");
             }
         }
         debug(String.format("Assigned Forbidden Machines - %s",forbiddenMachines));
     }
 
-    private void readTooNearTasks(Scanner fileRead) throws InvalidInputException {
+    private void readTooNearTasks(Scanner fileRead) throws Exception {
         debug("Reading Section - Too-Near Tasks");
         tooNearTasks = new LinkedList<>();
         String temp;
@@ -179,13 +154,13 @@ public class Parser {
                 tooNearTasks.add(new Pair<>(temps[0],temps[1]));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Too-Near Tasks - %s",temp));
-                throw new InvalidInputException("Some Error Happened");
+                throw new Exception("Some Error Happened");
             }
         }
         debug(String.format("Assigned Forbidden Machines - %s",tooNearTasks));
     }
 
-    private void readMachinePenalties(Scanner fileRead) throws InvalidInputException {
+    private void readMachinePenalties(Scanner fileRead) throws Exception {
         debug("Reading Section - Machine Penalties");
         machinePenalties = new LinkedList<>();
         String temp;
@@ -201,13 +176,13 @@ public class Parser {
                 machinePenalties.add(new LinkedList<>(Arrays.asList(results)));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Machine Penalties - %s",temp));
-                throw new InvalidInputException("Some Error Happened");
+                throw new Exception("Some Error Happened");
             }
         }
         debug(String.format("Assigned Machine Penalties - %s",machinePenalties));
     }
 
-    private void readTooNearPenalties(Scanner fileRead) throws InvalidTaskException {
+    private void readTooNearPenalties(Scanner fileRead) throws Exception {
         debug("Reading Section - Too-Near Penalties");
         tooNearPenalties = new LinkedList<>();
         String temp;
@@ -220,7 +195,7 @@ public class Parser {
                 tooNearPenalties.add(new Pair<>(new Pair<>(temps[0], temps[1]), Integer.parseInt(temps[2])));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Too-Near Penalties - %s",temp));
-                throw new InvalidTaskException("Some Error Happened");
+                throw new Exception("Some Error Happened");
             }
         }
         debug(String.format("Assigned Too-Near Penalties - %s",tooNearPenalties));

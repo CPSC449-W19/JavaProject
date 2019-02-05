@@ -1,10 +1,6 @@
 import IO.Parser;
 
-import java.util.logging.Logger;
-
 public class Main {
-
-    private static final Logger LOGGER = Logger.getLogger("");
 
     public static void main(String[] args) {
         System.out.println("CPSC 449 Winter 2019, test");
