@@ -19,11 +19,10 @@ public class Main {
             }
         }
 
-
-        //System.out.println("CPSC 449 Winter 2019, test");
         Parser parser;
         for (String fileName : filesToRead) {
-            parser = new Parser("src/InputFiles/"+fileName,true);
+            parser = new Parser("src/InputFiles/"+fileName,false);
+            /*
             System.out.println(parser.getFileName());
             System.out.println(parser.getName());
             System.out.println(parser.getForcedPartialAssignments());
@@ -31,6 +30,7 @@ public class Main {
             System.out.println(parser.getTooNearMachines());
             System.out.println(parser.getMachinePenalties());
             System.out.println(parser.getTooNearPenalties());
+            */
         }
     }
 }

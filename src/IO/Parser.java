@@ -29,7 +29,7 @@ public class Parser {
     private String location;
 
     // shared regular expressions
-    private final String SECTION = "[\\s*](Name:|(forced[\\s+]partial[\\s+]assignment:)|(forbidden[\\s+]machine:)|(too-near[\\s+]tasks:)|(machine[\\s+]penalties:)|(too-near penalities))[\\s*]";
+    private final String SECTION = "[\\s]*(Name:|(forced[\\s]+partial[\\s]+assignment:)|(forbidden[\\s]+machine:)|(too-near[\\s]+tasks:)|(machine[\\s]+penalties:)|(too-near penalities))[\\s]*";
 
     // containers
     private String name;
@@ -58,7 +58,7 @@ public class Parser {
         this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
         Scanner fileRead;
         String lineRead;
-
+        boolean[] visited = new boolean[6];
         try {
 
             fileRead = new Scanner(new File(getFileName())).useDelimiter("[\\r]?[\\n]");
@@ -67,14 +67,17 @@ public class Parser {
                 lineRead = fileRead.next().trim();
                 debug(String.format("Current Line In File %s", lineRead));
                 switch (lineRead) {
-                    case "Name:": name(fileRead); break;
-                    case "forced partial assignment:": forcedPartialAssignments(fileRead); break;
-                    case "forbidden machine:": forbiddenMachines(fileRead); break;
-                    case "too-near tasks:": tooNearTasks(fileRead); break;
-                    case "machine penalties:": machinePenalties(fileRead); break;
-                    case "too-near penalities": tooNearPenalties(fileRead); break;
+                    case "Name:": name(fileRead); visited[0] = true; break;
+                    case "forced partial assignment:": forcedPartialAssignments(fileRead); visited[1] = true; break;
+                    case "forbidden machine:": forbiddenMachines(fileRead); visited[2] = true; break;
+                    case "too-near tasks:": tooNearTasks(fileRead); visited[3] = true; break;
+                    case "machine penalties:": machinePenalties(fileRead); visited[4] = true; break;
+                    case "too-near penalities": tooNearPenalties(fileRead); visited[5] = true; break;
                     default: if (!lineRead.isEmpty()) throw new Exception("Error while parsing input file");
                 }
+            }
+            for (boolean visitor : visited) {
+                if (!visitor) throw new Exception("Error while parsing input file");
             }
             fileRead.close();
         } catch (FileNotFoundException fileNotFoundException) {
