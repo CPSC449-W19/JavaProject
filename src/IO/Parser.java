@@ -2,16 +2,15 @@ package IO;
 
 // library imports
 import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.io.File;
-import java.util.logging.*;
 import java.util.regex.Pattern;
 
 // package imports
-import Exception.*;
 import Structure.Pair;
 
 /**
@@ -24,14 +23,13 @@ import Structure.Pair;
 
 public class Parser {
 
-    private final static Logger LOGGER = Logger.getLogger(Parser.class.getName());
-
     // constants
     private final String fileName;
     private final boolean debug;
+    private String location;
 
     // shared regular expressions
-    private final String SECTION = "(Name:|(forced[\\s+]partial[\\s+]assignment:)|(forbidden[\\s+]machine:)|(too-near[\\s+]tasks:)|(machine[\\s+]penalties:)|(too-near penalities))";
+    private final String SECTION = "[\\s]*(Name:|(forced[\\s]+partial[\\s]+assignment:)|(forbidden[\\s]+machine:)|(too-near[\\s]+tasks:)|(machine[\\s]+penalties:)|(too-near penalities))[\\s]*";
 
     // containers
     private String name;
@@ -47,25 +45,9 @@ public class Parser {
      * @param debug the debug flag status determines whether or not to print debug messages
      */
     public Parser(String fileName, boolean debug) {
-        LogManager.getLogManager().reset();
-        LOGGER.setLevel(Level.ALL);
-
-        ConsoleHandler consoleHandler = new ConsoleHandler();
-        consoleHandler.setLevel(Level.FINER);
-        LOGGER.addHandler(consoleHandler);
-
-        LOGGER.severe("severe");
-        LOGGER.warning("warning");
-        LOGGER.info("info");
-        LOGGER.config("config");
-        LOGGER.fine("fine");
-        LOGGER.finer("finer");
-        LOGGER.finest("finest");
-        LOGGER.entering("s","a");
-        LOGGER.exiting("s","a");
-
+        this.location = String.format("%s %s",getClass().getName(), "Parser");
         this.fileName = fileName;
-        this.debug = false;
+        this.debug = debug;
         debug("Debugging Parser");
         debug(String.format("File Name Attribute Assigned As - %s", this.fileName));
         debug(String.format("Initializing Parser To Read - %s", fileName));
@@ -73,28 +55,29 @@ public class Parser {
     }
 
     private void initialize() {
-
-        LOGGER.entering(getClass().getName(),new Object(){}.getClass().getEnclosingMethod().getName());
-
+        this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
         Scanner fileRead;
         String lineRead;
-
+        boolean[] visited = new boolean[6];
         try {
 
-            fileRead = new Scanner(new File(getFileName())).useDelimiter("\\n");
+            fileRead = new Scanner(new File(getFileName())).useDelimiter("[\\r]?[\\n]");
 
             while (fileRead.hasNext()) {
                 lineRead = fileRead.next().trim();
-                debug(String.format("Current Line In File - %s", lineRead));
+                debug(String.format("Current Line In File %s", lineRead));
                 switch (lineRead) {
-                    case "Name:": readName(fileRead); break;
-                    case "forced partial assignment:": readForcedPartialAssignments(fileRead); break;
-                    case "forbidden machine:": readForbiddenMachines(fileRead); break;
-                    case "too-near tasks:": readTooNearTasks(fileRead); break;
-                    case "machine penalties:": readMachinePenalties(fileRead); break;
-                    case "too-near penalities": readTooNearPenalties(fileRead); break;
-                    default: if (!lineRead.isEmpty()) throw new ParsingInputException("Error while parsing input file");
+                    case "Name:": name(fileRead); visited[0] = true; break;
+                    case "forced partial assignment:": forcedPartialAssignments(fileRead); visited[1] = true; break;
+                    case "forbidden machine:": forbiddenMachines(fileRead); visited[2] = true; break;
+                    case "too-near tasks:": tooNearTasks(fileRead); visited[3] = true; break;
+                    case "machine penalties:": machinePenalties(fileRead); visited[4] = true; break;
+                    case "too-near penalities": tooNearPenalties(fileRead); visited[5] = true; break;
+                    default: if (!lineRead.isEmpty()) throw new Exception("Error while parsing input file");
                 }
+            }
+            for (boolean visitor : visited) {
+                if (!visitor) throw new Exception("Error while parsing input file");
             }
             fileRead.close();
         } catch (FileNotFoundException fileNotFoundException) {
@@ -102,138 +85,171 @@ public class Parser {
             System.exit(-1);
         } catch (Exception exception) {
             System.out.println(exception.getMessage());
-            System.exit(-1);
+            //System.exit(-1);
         }
     }
 
-    private void readName(Scanner fileRead) throws ParsingInputException {
-        debug("Reading Section - Name");
+    private void name(Scanner fileRead) throws Exception {
+        this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
+        debug("ENTER");
         Pattern namePattern = Pattern.compile("[\\s]*[\\S]+[\\s]*");
         String temp = "";
         if (fileRead.hasNext(namePattern) & name == null) {
             temp = fileRead.next(namePattern);
-            debug(String.format("Read Name - %s", temp));
+            debug(String.format("Read Name: %s", temp));
             name = temp;
         } else {
-            debug(String.format("Throwing Exception From Name - %s", temp));
-            throw new ParsingInputException("Error while parsing input file");
+            debug(String.format("Throwing Exception From Name: %s", temp));
+            throw new Exception("Error while parsing input file");
         }
         debug(String.format("Assigned Name - %s", name));
+        debug("RETURN");
     }
 
     /**
      * Add Stuff for checking partial assignment error,
      * Also Check the InvalidMachineTaskException
      * @param fileRead
-     * @throws PartialAssignmentException
-     * @throws InvalidMachineTaskException
+     * @throws Exception
      */
-    private void readForcedPartialAssignments(Scanner fileRead) throws PartialAssignmentException, InvalidMachineTaskException {
-        debug("Reading Section - Forced Partial Assignments");
+    private void forcedPartialAssignments(Scanner fileRead) throws Exception {
+        this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
+        debug("ENTER");
         forcedPartialAssignments = new LinkedList<>();
         String temp;
         String[] temps;
         while (fileRead.hasNext() && !fileRead.hasNext(SECTION)) {
             temp = fileRead.next().trim();
-            if (temp.matches("[(][1-8],[A-H][)]")) {
+            if (temp.matches("[(]\\S+,\\S+[)]")) {
                 temps = temp.substring(1,temp.length()-1).split(",");
                 debug(String.format("Read Forced Partial Assignment - %s",temp));
+                if (!temps[0].matches("[1-8]") || !temps[1].matches("[A-H]"))
+                    throw new Exception("invalid machine/task");
+                for (Pair<Integer,String> entity : forcedPartialAssignments)
+                    if (entity.getX() == Integer.parseInt(temps[0]) || entity.getY().equals(temps[1]))
+                        throw new Exception("partial assignment error");
                 forcedPartialAssignments.add(new Pair<>(Integer.parseInt(temps[0]),temps[1]));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Invalid Machine/Task Exception From Forced Partial Assignments - %s",temp));
-                throw new InvalidMachineTaskException("invalid machine/task");
+                throw new Exception("Error while parsing input file");
             }
         }
         debug(String.format("Assigned Forced Partial Assignments - %s",forcedPartialAssignments));
+        debug("RETURN");
     }
 
-    private void readForbiddenMachines(Scanner fileRead) throws InvalidInputException {
+    private void forbiddenMachines(Scanner fileRead) throws Exception {
+        this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
         debug("Reading Section - Forbidden Machines");
         forbiddenMachines = new LinkedList<>();
         String temp;
         String[] temps;
         while (fileRead.hasNext() && !fileRead.hasNext(SECTION)) {
             temp = fileRead.next().trim();
-            if (temp.matches("[(][1-8],[A-H][)]")) {
+            if (temp.matches("[(]\\S+,\\S+[)]")) {
                 temps = temp.substring(1,temp.length()-1).split(",");
                 debug(String.format("Read Forbidden Machine - %s",temp));
+                if (!temps[0].matches("[1-8]") || !temps[1].matches("[A-H]"))
+                    throw new Exception("invalid machine/task");
                 forbiddenMachines.add(new Pair<>(Integer.parseInt(temps[0]),temps[1]));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Forbidden Machines - %s",temp));
-                throw new InvalidInputException("Some Error Happened");
+                throw new Exception("Error while parsing input file");
             }
         }
         debug(String.format("Assigned Forbidden Machines - %s",forbiddenMachines));
     }
 
-    private void readTooNearTasks(Scanner fileRead) throws InvalidInputException {
+    private void tooNearTasks(Scanner fileRead) throws Exception {
+        this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
         debug("Reading Section - Too-Near Tasks");
         tooNearTasks = new LinkedList<>();
         String temp;
         String[] temps;
         while (fileRead.hasNext() && !fileRead.hasNext(SECTION)) {
             temp = fileRead.next().trim();
-            if (temp.matches("[(][A-H],[A-H][)]")) {
+            if (temp.matches("[(]\\S+,\\S+[)]")) {
                 temps = temp.substring(1,temp.length()-1).split(",");
                 debug(String.format("Read Too-Near Task - %s",temp));
+                if (!temps[0].matches("[A-H]") || !temps[1].matches("[A-H]"))
+                    throw new Exception("invalid machine/task");
                 tooNearTasks.add(new Pair<>(temps[0],temps[1]));
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Too-Near Tasks - %s",temp));
-                throw new InvalidInputException("Some Error Happened");
+                throw new Exception("Error while parsing input file");
             }
         }
         debug(String.format("Assigned Forbidden Machines - %s",tooNearTasks));
     }
 
-    private void readMachinePenalties(Scanner fileRead) throws InvalidInputException {
+    private void machinePenalties(Scanner fileRead) throws Exception {
+        this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
         debug("Reading Section - Machine Penalties");
         machinePenalties = new LinkedList<>();
         String temp;
         String[] temps;
         Integer[] results;
+        int counter = 0;
         while (fileRead.hasNext() && !fileRead.hasNext(SECTION)) {
             temp = fileRead.next().trim();
-            if (temp.matches("[\\d+]\\s[\\d+]\\s[\\d+]\\s[\\d+]\\s[\\d+]\\s[\\d+]\\s[\\d+]\\s[\\d+]")) {
+            if (temp.matches("([\\S+]([\\s]+)?)+")) {
                 temps = temp.split("\\s+");
                 results = new Integer[temps.length];
-                for (int index = 0; index < temps.length; index++) results[index] = Integer.parseInt(temps[index]);
+                if (temps.length != 8) throw new Exception("machine penalty error");
+                for (int index = 0; index < temps.length; index++) {
+                    if (!temps[index].matches("(0|[1-9][0-9]*)")) throw new Exception("invalid penalty");
+                    results[index] = Integer.parseInt(temps[index]);
+                }
                 debug(String.format("Read Machine Penalties - %s", temp));
                 machinePenalties.add(new LinkedList<>(Arrays.asList(results)));
+                counter++;
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Machine Penalties - %s",temp));
-                throw new InvalidInputException("Some Error Happened");
+                throw new Exception("Error while parsing input file");
             }
         }
+        if (counter != 8) throw new Exception("machine penalty error");
         debug(String.format("Assigned Machine Penalties - %s",machinePenalties));
     }
 
-    private void readTooNearPenalties(Scanner fileRead) throws InvalidTaskException {
+    private void tooNearPenalties(Scanner fileRead) throws Exception {
+        this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
         debug("Reading Section - Too-Near Penalties");
         tooNearPenalties = new LinkedList<>();
         String temp;
         String[] temps;
         while (fileRead.hasNext() && !fileRead.hasNext(SECTION)) {
             temp = fileRead.next().trim();
-            if (temp.matches("[(][A-H],[A-H],[\\d+][)]")) {
+            if (temp.matches("[(][\\S+],[\\S+],[\\S+][)]")) {
                 temps = temp.substring(1,temp.length()-1).split(",");
+                if (!temps[2].matches("(0|[1-9][0-9]*)")) throw new Exception("invalid penalty");
+                if (!temps[0].matches("[A-H]") || !temps[1].matches("[A-H]")) throw new Exception("invalid task");
                 debug(String.format("Read Too-Near Penalties - %s",temp));
-                tooNearPenalties.add(new Pair<>(new Pair<>(temps[0], temps[1]), Integer.parseInt(temps[2])));
+                boolean isAssigned = false;
+                int index = 0;
+                while (index < tooNearPenalties.size()) {
+                    if (tooNearPenalties.get(index).getX().getX().equals(temps[0]) && tooNearPenalties.get(index).getX().getY().equals(temps[1])) {
+                        isAssigned = true;
+                        break;
+                    }
+                    index++;
+                }
+                if (isAssigned) {
+                    tooNearPenalties.get(index).setY(Integer.parseInt(temps[2]));
+                } else {
+                    tooNearPenalties.add(new Pair<>(new Pair<>(temps[0], temps[1]), Integer.parseInt(temps[2])));
+                }
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Too-Near Penalties - %s",temp));
-                throw new InvalidTaskException("Some Error Happened");
+                throw new Exception("Error while parsing input file");
             }
         }
         debug(String.format("Assigned Too-Near Penalties - %s",tooNearPenalties));
     }
 
-    private void checkValidity() {
-
-    }
-
     private void debug(String message) {
-        if (isDebug()) {
-            System.out.println("Parser Debug Message: " + message);
-        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
+        if (isDebug()) System.err.println(String.format("%s [DEBUG] %s - %s",LocalDateTime.now().format(formatter),location,message));
     }
 
     public String getFileName() {
