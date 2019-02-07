@@ -29,7 +29,7 @@ public class Parser {
     private String location;
 
     // shared regular expressions
-    private final String SECTION = "(Name:|(forced[\\s+]partial[\\s+]assignment:)|(forbidden[\\s+]machine:)|(too-near[\\s+]tasks:)|(machine[\\s+]penalties:)|(too-near penalities))";
+    private final String SECTION = "[\\s*](Name:|(forced[\\s+]partial[\\s+]assignment:)|(forbidden[\\s+]machine:)|(too-near[\\s+]tasks:)|(machine[\\s+]penalties:)|(too-near penalities))[\\s*]";
 
     // containers
     private String name;
@@ -47,7 +47,7 @@ public class Parser {
     public Parser(String fileName, boolean debug) {
         this.location = String.format("%s %s",getClass().getName(), "Parser");
         this.fileName = fileName;
-        this.debug = true;
+        this.debug = debug;
         debug("Debugging Parser");
         debug(String.format("File Name Attribute Assigned As - %s", this.fileName));
         debug(String.format("Initializing Parser To Read - %s", fileName));
@@ -61,7 +61,7 @@ public class Parser {
 
         try {
 
-            fileRead = new Scanner(new File(getFileName())).useDelimiter("\\n");
+            fileRead = new Scanner(new File(getFileName())).useDelimiter("[\\r]?[\\n]");
 
             while (fileRead.hasNext()) {
                 lineRead = fileRead.next().trim();
@@ -82,7 +82,7 @@ public class Parser {
             System.exit(-1);
         } catch (Exception exception) {
             System.out.println(exception.getMessage());
-            System.exit(-1);
+            //System.exit(-1);
         }
     }
 
@@ -111,7 +111,7 @@ public class Parser {
      */
     private void forcedPartialAssignments(Scanner fileRead) throws Exception {
         this.location = String.format("%s %s",getClass().getName(), new Object(){}.getClass().getEnclosingMethod().getName());
-        debug("Reading Section - Forced Partial Assignments");
+        debug("ENTER");
         forcedPartialAssignments = new LinkedList<>();
         String temp;
         String[] temps;
@@ -132,6 +132,7 @@ public class Parser {
             }
         }
         debug(String.format("Assigned Forced Partial Assignments - %s",forcedPartialAssignments));
+        debug("RETURN");
     }
 
     private void forbiddenMachines(Scanner fileRead) throws Exception {
