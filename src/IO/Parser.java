@@ -216,10 +216,25 @@ public class Parser {
         String[] temps;
         while (fileRead.hasNext() && !fileRead.hasNext(SECTION)) {
             temp = fileRead.next().trim();
-            if (temp.matches("[(][A-H],[A-H],[\\d+][)]")) {
+            if (temp.matches("[(][\\S+],[\\S+],[\\S+][)]")) {
                 temps = temp.substring(1,temp.length()-1).split(",");
+                if (!temps[2].matches("(0|[1-9][0-9]*)")) throw new Exception("invalid penalty");
+                if (!temps[0].matches("[A-H]") || !temps[1].matches("[A-H]")) throw new Exception("invalid task");
                 debug(String.format("Read Too-Near Penalties - %s",temp));
-                tooNearPenalties.add(new Pair<>(new Pair<>(temps[0], temps[1]), Integer.parseInt(temps[2])));
+                boolean isAssigned = false;
+                int index = 0;
+                while (index < tooNearPenalties.size()) {
+                    if (tooNearPenalties.get(index).getX().getX().equals(temps[0]) && tooNearPenalties.get(index).getX().getY().equals(temps[1])) {
+                        isAssigned = true;
+                        break;
+                    }
+                    index++;
+                }
+                if (isAssigned) {
+                    tooNearPenalties.get(index).setY(Integer.parseInt(temps[2]));
+                } else {
+                    tooNearPenalties.add(new Pair<>(new Pair<>(temps[0], temps[1]), Integer.parseInt(temps[2])));
+                }
             } else if (!temp.isEmpty()) {
                 debug(String.format("Throwing Exception From Too-Near Penalties - %s",temp));
                 throw new Exception("Error while parsing input file");
