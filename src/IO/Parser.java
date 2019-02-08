@@ -272,7 +272,7 @@ public class Parser {
         return this.forbiddenMachines;
     }
 
-    public LinkedList<Pair<String, String>> getTooNearMachines() {
+    public LinkedList<Pair<String, String>> getTooNearTasks() {
         return this.tooNearTasks;
     }
 

@@ -1,4 +1,5 @@
 import IO.Parser;
+import Structure.BranchAndBound;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -20,17 +21,16 @@ public class Main {
         }
 
         Parser parser;
+        BranchAndBound branchAndBound;
+        parser = new Parser("src/InputFiles/optzero.txt",true);
+        branchAndBound = new BranchAndBound(parser);
+        branchAndBound.findSolution();
+        /*
         for (String fileName : filesToRead) {
             parser = new Parser("src/InputFiles/"+fileName,false);
-            /*
-            System.out.println(parser.getFileName());
-            System.out.println(parser.getName());
-            System.out.println(parser.getForcedPartialAssignments());
-            System.out.println(parser.getForbiddenMachines());
-            System.out.println(parser.getTooNearMachines());
-            System.out.println(parser.getMachinePenalties());
-            System.out.println(parser.getTooNearPenalties());
-            */
+            branchAndBound = new BranchAndBound(parser);
+            branchAndBound.findSolution();
         }
+        */
     }
 }
