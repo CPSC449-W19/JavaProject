@@ -23,7 +23,7 @@ public class Main {
         Parser parser;
         BranchAndBound branchAndBound;
         parser = new Parser("src/InputFiles/optzero.txt",true);
-        branchAndBound = new BranchAndBound(parser);
+        branchAndBound = new BranchAndBound(parser, true);
         branchAndBound.findSolution();
         /*
         for (String fileName : filesToRead) {
