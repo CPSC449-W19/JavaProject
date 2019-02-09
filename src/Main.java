@@ -22,15 +22,20 @@ public class Main {
 
         Parser parser;
         BranchAndBound branchAndBound;
+
         parser = new Parser("src/InputFiles/optzero.txt",true);
         branchAndBound = new BranchAndBound(parser, true);
         branchAndBound.findSolution();
+
         /*
         for (String fileName : filesToRead) {
-            parser = new Parser("src/InputFiles/"+fileName,false);
-            branchAndBound = new BranchAndBound(parser);
-            branchAndBound.findSolution();
+            parser = new Parser("src/InputFiles/"+fileName,true);
+            if (!parser.isException()) {
+                branchAndBound = new BranchAndBound(parser, true);
+                branchAndBound.findSolution();
+            }
         }
         */
+
     }
 }
