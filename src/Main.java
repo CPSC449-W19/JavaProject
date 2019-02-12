@@ -1,4 +1,6 @@
+import IO.Output;
 import IO.Parser;
+import Structure.BranchAndBound;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -8,29 +10,36 @@ public class Main {
     public static void main(String[] args) {
 
         LinkedList<String> filesToRead = new LinkedList<>();
-
-        if (args.length > 1) {
+        LinkedList<String> filesToWrite = new LinkedList<>();
+        if (args.length == 3) {
             filesToRead.add(args[1]);
+            filesToWrite.add(args[2]);
         } else {
-            File directory = new File("src/InputFIles");
+            File directory = new File("src/InputFiles");
             File[] listOfFiles = directory.listFiles();
-            for (File file : listOfFiles) {
-                filesToRead.add(file.getName());
+            if (listOfFiles != null) {
+                for (File file : listOfFiles) {
+                    filesToRead.add(file.getName());
+                    filesToWrite.add(file.getName());
+                }
             }
         }
 
         Parser parser;
-        for (String fileName : filesToRead) {
-            parser = new Parser("src/InputFiles/"+fileName,false);
-            /*
-            System.out.println(parser.getFileName());
-            System.out.println(parser.getName());
-            System.out.println(parser.getForcedPartialAssignments());
-            System.out.println(parser.getForbiddenMachines());
-            System.out.println(parser.getTooNearMachines());
-            System.out.println(parser.getMachinePenalties());
-            System.out.println(parser.getTooNearPenalties());
-            */
-        }
+        BranchAndBound branchAndBound;
+        Output output;
+        //for (String fileName : filesToRead) {
+            parser = new Parser("src/InputFiles/toonearpen1.txt",false);
+            output = new Output("src/OutputFiles/toonearpen1.txt");
+            if (parser.isException()) {
+                output.write(parser.getMessage());
+                output.close();
+            } else {
+                branchAndBound = new BranchAndBound(parser, false);
+                branchAndBound.findSolution();
+                output.write(branchAndBound.getMessage());
+                output.close();
+            }
+        //}
     }
 }
