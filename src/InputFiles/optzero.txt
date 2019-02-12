@@ -1,28 +1,11 @@
 Name:
-testName
+optzero
 
 forced partial assignment:
-(1,A)
-(2,B)
-(3,A)
-(4,D)
 
-forbidden:
-(1,E)
-(2,F)
-(3,G)
-(4,H)
-
+forbidden machine:
+ 
 too-near tasks:
-(A,C)
-(A,D)
-(B,C)
-(L,D)
-(E,F)
-(E,G)
-(E,H)
-(D,F)
-(D,H)
 
 machine penalties:
 0 1 1 1 1 1 1 1
@@ -31,14 +14,7 @@ machine penalties:
 1 1 1 0 1 1 1 1
 1 1 1 1 0 1 1 1
 1 1 1 1 1 0 1 1
+1 1 1 1 1 1 0 1
 1 1 1 1 1 1 1 0
 
 too-near penalities
-(A,B,1)
-(A,E,6)
-(B,F,5)
-(B,G,2)
-(C,A,3)
-(A,B,0)
-(F,G,1)
-(A,B,65)

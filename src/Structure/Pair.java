@@ -12,15 +12,16 @@ public class Pair<T1, T2> {
 
     @Override
     public String toString() {
-        return String.format("(%s,%s)",getX(),getY());
+        return String.format("[%s, %s]",getX(),getY());
     }
 
+    public void setY(T2 y) {
+        this.y = y;
+    }
     public T1 getX() {
         return this.x;
     }
-
     public T2 getY() {
         return this.y;
     }
-
 }

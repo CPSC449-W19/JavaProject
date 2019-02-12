@@ -1,20 +1,45 @@
+import IO.Output;
 import IO.Parser;
+import Structure.BranchAndBound;
 
-import java.util.logging.Logger;
+import java.io.File;
+import java.util.LinkedList;
 
 public class Main {
 
-    private static final Logger LOGGER = Logger.getLogger("");
-
     public static void main(String[] args) {
-        System.out.println("CPSC 449 Winter 2019, test");
-        Parser parser = new Parser("src/InputFiles/normalTest.txt",true);
-        System.out.println(parser.getFileName());
-        System.out.println(parser.getName());
-        System.out.println(parser.getForcedPartialAssignments());
-        System.out.println(parser.getForbiddenMachines());
-        System.out.println(parser.getTooNearMachines());
-        System.out.println(parser.getMachinePenalties());
-        System.out.println(parser.getTooNearPenalties());
+
+        LinkedList<String> filesToRead = new LinkedList<>();
+        LinkedList<String> filesToWrite = new LinkedList<>();
+        if (args.length == 3) {
+            filesToRead.add(args[1]);
+            filesToWrite.add(args[2]);
+        } else {
+            File directory = new File("src/InputFiles");
+            File[] listOfFiles = directory.listFiles();
+            if (listOfFiles != null) {
+                for (File file : listOfFiles) {
+                    filesToRead.add(file.getName());
+                    filesToWrite.add(file.getName());
+                }
+            }
+        }
+
+        Parser parser;
+        BranchAndBound branchAndBound;
+        Output output;
+        //for (String fileName : filesToRead) {
+            parser = new Parser("InputFiles/toonearpen1.txt",false);
+            output = new Output("OutputFiles/toonearpen1.txt");
+            if (parser.isException()) {
+                output.write(parser.getMessage());
+                output.close();
+            } else {
+                branchAndBound = new BranchAndBound(parser, false);
+                branchAndBound.findSolution();
+                output.write(branchAndBound.getMessage());
+                output.close();
+            }
+        //}
     }
 }

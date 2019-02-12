@@ -5,8 +5,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedList;
+
+
 import IO.Parser;
 
+
+/**
+ * BranchAndBound will use supplied penalty lists to determine the best possible machine-task assignment with lowest cost.
+ * 
+ * @author Isha Afzaal
+ * @since February 12, 2019
+ */
 public class BranchAndBound {
 
 	// Constants
@@ -35,6 +44,9 @@ public class BranchAndBound {
 		this.debug = debug;
     }
 
+    /**
+     * Getter for solution.
+     */
     public LinkedList<Node> getAssignments(){
 			return assignments;
 		}
@@ -90,6 +102,24 @@ public class BranchAndBound {
 		newNode.setMachine(machine);
 		newNode.setAssigned(temp);
 
+		
+		// ***********DEBUG*********** //
+	/*	if (newNode.getMachine() > 5) {
+			
+			// Standard stuff
+			System.out.println("---- On Level " + Integer.toString(newNode.getMachine()) + " ----");
+			System.out.println("Task is " + newNode.getTask() + ".");
+			
+			// Check the assignment matrix
+			System.out.println("The assignment matrix:");
+			for (int i = 0; i < newNode.getAssigned().length; i++) {
+				
+				System.out.println(Integer.toString(i + 1) + " is set to " + newNode.getAssigned()[i] + ".");
+				
+			}
+		} */
+		// ********** END DEBUG ************ //
+		
 		return newNode;
 
 	}
@@ -174,7 +204,7 @@ public class BranchAndBound {
 				int countMachines = 0;
 							
 				// Use the counter variable to ensure termination of the loop
-				while ( (findMachineOne.getMachine() != 1) && (countMachines < 8) ) {
+				while ( (findMachineOne.getMachine() != 1) && (countMachines < 9) ) {
 								
 					findMachineOne = findMachineOne.getParent();
 					countMachines++;
@@ -188,6 +218,9 @@ public class BranchAndBound {
 					return -1;
 							
 				}
+
+				// DEBUG
+				System.out.println("In too near tasks hard.");
 
 			}
 	
@@ -276,7 +309,7 @@ public class BranchAndBound {
 				int countMachines = 0;
 				
 				// Use the counter variable to ensure termination of the loop
-				while ( (findMachineOne.getMachine() != 1) && (countMachines < 8) ) {
+				while ( (findMachineOne.getMachine() != 1) && (countMachines < 9) ) {
 					
 					findMachineOne = findMachineOne.getParent();
 					countMachines++;
@@ -297,6 +330,9 @@ public class BranchAndBound {
 						
 						// Add the near-task penalty
 						cost += temp.getY();
+
+						// DEBUG
+						System.out.println("In too near tasks soft.");
 					}
 					
 				}
@@ -304,6 +340,23 @@ public class BranchAndBound {
 			}
 
 		}
+		
+		
+		// ********** DEBUG ***********
+		if (node.getMachine() == 6) {
+			
+			// Print out the location
+			System.out.println("In calculatePenalty and on level 6 for machine 6");
+			
+			// Print out the task
+			System.out.println("We are on task " + node.getTask());
+			
+			// Print out the cost
+			System.out.println("With the cost " + Integer.toString(cost));
+			
+		}
+		
+		// *********** END DEBUG ************
 
 		return cost;
 
@@ -319,6 +372,10 @@ public class BranchAndBound {
 		if (node.getMachine() == -1) {
 			return;
 		}
+		
+		// DEBUG
+		System.out.println("DEBUG: Machine # " + Integer.toString(node.getMachine()) + " with task " + node.getTask() + " with cost " + Integer.toString(node.getCost()) + ".");
+
 		outputSolution(node.getParent());
 
 		assignments.add(node);
@@ -357,6 +414,17 @@ public class BranchAndBound {
 		// Iterating through the live nodes now
 		while (liveNodes.size() != 0) {
 
+			// ***** DEBUG ******** Iterate through the live nodes
+			Node test;
+			System.out.println("\n---- LIVE NODES -----");
+			for (int g = 0; g < liveNodes.size(); g++) {
+				test = liveNodes.get(g);
+				System.out.println("Machine " + Integer.toString(test.getMachine()) + " Task: " + test.getTask() + " Cost: " + Integer.toString(test.getCost()) + ".");
+			}
+			
+			
+			// ******* END DEBUG *********
+			
 			// Find a live node that is valid (the cost is not -1)
 			for (int i = 0; i < liveNodes.size(); i++) {
 				if (liveNodes.get(i).getCost() != -1) {
@@ -365,11 +433,19 @@ public class BranchAndBound {
 					break;
 				}
 			}
+			
+			// DEBUG
+			System.out.println("--- FOUND LEAST NODE ----");
+			System.out.println("Machine: " + Integer.toString(leastNode.getMachine()) + " Task: " + leastNode.getTask() + " Cost: " + Integer.toString(leastNode.getCost()) );
 
 			// Find the live node that has the least cost
 			for (int j = 0; j < liveNodes.size(); j++) {
+				
+				// DEBUG
+				System.out.println("---- FINDING LEAST NODE ----- ");
+				System.out.println("Live node current machine: " + Integer.toString(liveNodes.get(j).getMachine()) + " with task: " + liveNodes.get(j).getTask() + " with cost: " + Integer.toString(liveNodes.get(j).getCost() ) );
 
-				if ( (liveNodes.get(j).getCost() < leastNode.getCost() ) && (liveNodes.get(j).getCost() != -1) ) {
+				if ( (liveNodes.get(j).getCost() < leastNode.getCost() ) && (liveNodes.get(j).getCost() != -1) && (liveNodes.get(j).getMachine() == currentLevel) ) {
 
 					// If the current live node's cost value is valid and less than the current leastNode, update leastNode and its index
 					leastNode = liveNodes.get(j);
@@ -378,6 +454,10 @@ public class BranchAndBound {
 				}
 
 			}
+			
+			// DEBUG
+			System.out.println("----- CHOSEN LEAST NODE ----- ");
+			System.out.println("Chosen least node current machine: " + Integer.toString(leastNode.getMachine()) + " with task: " + leastNode.getTask() + " with cost: " + Integer.toString(leastNode.getCost() ) );
 
 			// Remove the least node from the list of live nodes
 			liveNodes.remove(leastIndex);
@@ -435,13 +515,21 @@ public class BranchAndBound {
 
 					// Create a new node for the unassigned job
 					Node nextMachine = createNode(currentLevel, currentTask, leastNode.getAssigned(), leastNode);
+					
+					// Calculate the machine's penalty
+					int calc = calculatePenalty(nextMachine);
+					nextMachine.setCost(calc);
 
 					// Update the path cost for the new node only if the next assignment is valid
-					if (calculatePenalty(nextMachine) != -1) {
+					if (calc != -1) {
 
-						// Update the new assignment's cost and path cost
-						nextMachine.setPathCost(leastNode.getPathCost() + calculatePenalty(nextMachine));
-						nextMachine.setCost(calculatePenalty(nextMachine));
+						// Update the new assignment's path cost
+						nextMachine.setPathCost(leastNode.getPathCost() + calc);
+						
+						// DEBUG
+						System.out.println("----- ADDING CHILDREN -----");
+						System.out.println("Adding machine " + Integer.toString(nextMachine.getMachine()) + " with task " + nextMachine.getTask() + " with cost " + Integer.toString(nextMachine.getCost()) );
+
 						// Add the new machine to the list of live nodes
 						liveNodes.add(nextMachine);
 
@@ -449,6 +537,21 @@ public class BranchAndBound {
 
 				}
 
+			}
+			
+			// Remove all nodes that were on the previous level
+			LinkedList<Integer> removeThis = new LinkedList<Integer> ();
+			for (int m = 0; m < liveNodes.size(); m++) {
+				if (liveNodes.get(m).getMachine() < currentLevel) {
+					removeThis.add(m);
+				}
+			}
+			
+			for (int n = 0; n < removeThis.size(); n++) {
+				System.out.println("---- REMOVING -----");
+				System.out.println("Removing machine " + Integer.toString(liveNodes.get(n).getMachine()) + " with the task " + liveNodes.get(n).getTask() + " and the cost " + Integer.toString(liveNodes.get(n).getCost()));
+				liveNodes.remove(n);
+				
 			}
 		}
 	}
