@@ -34,6 +34,7 @@ public class Parser {
     private final boolean debug;
     private String location;
     private boolean exception = false;
+    private String message = "";
 
     // shared regular expressions
     private final String SECTION = "[\\s]*(Name:|(forced[\\s]+partial[\\s]+assignment:)|(forbidden[\\s]+machine:)|(too-near[\\s]+tasks:)|(machine[\\s]+penalties:)|(too-near penalities))[\\s]*";
@@ -104,9 +105,9 @@ public class Parser {
             debug("File Not Found - " + fileName);
             System.exit(-1);
         } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+            debug(exception.getMessage());
+            this.message = exception.getMessage();
             this.exception = true;
-            //System.exit(-1);
         }
         debug("RETURN");
     }
@@ -366,6 +367,10 @@ public class Parser {
 
     private boolean isDebug() {
         return this.debug;
+    }
+
+    public String getMessage() {
+        return this.message;
     }
 
     public String getName() {

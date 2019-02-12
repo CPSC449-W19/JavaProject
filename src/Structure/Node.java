@@ -1,6 +1,6 @@
 package Structure;
 
-public class Node {
+public class Node implements Comparable<Node> {
 
   //variables
   private Node parent;
@@ -9,6 +9,10 @@ public class Node {
   private int pathcost;
   private int cost; //cost of assignment
   private boolean [] jobsAssigned; // Keeps track of which jobs are available
+
+  public int compareTo(Node node) {
+    return this.machine - node.machine;
+  }
 
   /**
    *  Setter methods

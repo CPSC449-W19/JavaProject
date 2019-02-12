@@ -3,6 +3,7 @@ package Structure;
 // Library imports
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.LinkedList;
 import IO.Parser;
 
@@ -16,6 +17,8 @@ public class BranchAndBound {
     private LinkedList<LinkedList<Integer>> machinePenalties;
     private LinkedList<Pair<Pair<String,String>,Integer>> tooNearPenalties;
     private LinkedList<Node> assignments = new LinkedList<>();
+    private int totalCost = Integer.MAX_VALUE;
+    private String message = "No valid solution possible!";
     private boolean debug;
 	private String location;
 
@@ -252,30 +255,13 @@ public class BranchAndBound {
 	 * @return String string that holds the solution.
 	 */
 	public void outputSolution (Node node) {
-
 		// Check if the parent node is the dummy root node
 		if (node.getMachine() == -1) {
 			return;
 		}
-
-
-		// Recursive call
-		outputSolution (node.getParent());
-
-		// Output the solution
-		System.out.println("Assigned machine " + Integer.toString(node.getMachine()) + " to task " + node.getTask() + " with the cost of "+
-				Integer.toString(node.getCost()) + ".");
-
+		outputSolution(node.getParent());
 
 		assignments.add(node);
-
-
-
-
-	}
-
-	public void outputCost(Node node) {
-		System.out.println("Total Cost: " + findCost(node));
 	}
 
 	public int findCost(Node node) {
@@ -348,8 +334,8 @@ public class BranchAndBound {
 			if (currentLevel > MAX_NUM) {
 
 				outputSolution(leastNode);
-				outputCost(leastNode);
-				System.out.println();
+				totalCost = findCost(leastNode);
+				messageBuilder();
 				return;
 
 			}
@@ -406,6 +392,21 @@ public class BranchAndBound {
 			}
 		}
 	}
+
+	private void messageBuilder() {
+		if (assignments.size() != 8) this.message = "No valid solution possible!";
+		else {
+			this.message = "Solution";
+			assignments.sort(Comparator.naturalOrder());
+			for (Node node : assignments) this.message += " " + node.getTask();
+			this.message += "; Quality: " + this.totalCost;
+		}
+	}
+
+	public String getMessage() {
+		return this.message;
+	}
+
 	private void debug(String message) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
 		if (isDebug()) System.err.println(String.format("%s [DEBUG] %s - %s", LocalDateTime.now().format(formatter),location,message));
