@@ -6,27 +6,34 @@ import java.util.Arrays;
 import IO.Parser;
 
 
-
+/**
+ * BruteForce uses a brute force approach to solving a given instance of the machine-task assignment problem.
+ * It receives all hard and soft constraints via Parser object that is passed into the BruteForce constructor.
+ * Call the findSolution method to solve the machine-task assignment problem.
+ * 
+ * @author Elzanne Venter
+ * @since February 2019
+ */
 public class BruteForce{
 	
+	// Penalties
 	private LinkedList<Pair<Integer,String>> forcedPartialAssignments;
     private LinkedList<Pair<Integer,String>> forbiddenMachines;
     private LinkedList<Pair<String,String>> tooNearTasks;
     private LinkedList<LinkedList<Integer>> machinePenalties;
     private LinkedList<Pair<Pair<String,String>,Integer>> tooNearPenalties;
+  //  private boolean debug;
     LinkedList<LinkedList<String>> all_possible = new LinkedList<LinkedList<String>>();
     LinkedList<String> x = new LinkedList<String>();
 
-    //Containers
-    LinkedList<String> finalsolution = new LinkedList<>();
-    //LinkedList<LinkedList<String>> all_possible_solutions = new LinkedList<LinkedList<>>();
 
     private String [] tasks = {"A","B","C","D","E","F","G","H"};
     private int min_cost = Integer.MAX_VALUE;
 
-    //LinkedList<LinkedList<String>> all_possible = new LinkedList<LinkedList<String>>();
-
-
+    /**
+     * Constructor.
+     * @param parser is used to initialize the penalty lists
+     */
     public BruteForce ( Parser parser) {
 
   		this.forcedPartialAssignments = parser.getForcedPartialAssignments();
@@ -38,40 +45,40 @@ public class BruteForce{
       }
 
 
+    /**
+     * Getter for all possible solutions.
+     */
     public LinkedList<LinkedList<String>> getAllPossible(){
       return all_possible;
     }
 
+    
+    /**
+     * Create all possible solutions.
+     */
     public LinkedList<LinkedList<String>> createAll(){
         all_possible.clear();
         generateAll(tasks,8,0);
         System.out.println(all_possible.size());
-        //System.out.println(all_possible);
         return all_possible;
     }
 
-    //REFERENCE: HEAP'S algorithm for finding all permutations
+    
+    /**
+     * Generate all possible solutions. Should have 40320 permutations.
+     */
     public void generateAll(String[] tasks,int size, int count){
 
       if (size == 1){
         x = new LinkedList<String>();
         for (int i = 0; i<8; i++){
-          //System.out.print(tasks[i] + " ");
-
           x.add(tasks[i]);
-
-          //System.out.print(x);
-          //System.out.println(all_possible.size());
         }
         all_possible.add(x);
-          //all_possible.add(x);
       }
-
-
 
       for (int i = 0; i<size; i++){
         generateAll(tasks,size-1,count+1);
-        //all_possible.add(x);
 
         if (size%2 ==1){
           String temp = tasks[0];
@@ -85,13 +92,13 @@ public class BruteForce{
           tasks[size-1] = temp;
         }
       }
-      //System.out.println(all_possible.size());
-      //System.out.println();
-      //System.out.println(all_possible);
-      //System.out.println("done");
+
     }
 
-    public LinkedList<LinkedList<String>> hardConstraints_assignments(LinkedList<LinkedList<String>> all_possible
+    /**
+     * hardConstraints_assignments 
+     */
+    public LinkedList<LinkedList<String>> hardConstraints_assignments (LinkedList<LinkedList<String>> all_possible
     , LinkedList<Pair<Integer,String>> forced_partial, LinkedList<Pair<Integer,String>> forbidden){
 
       //System.out.println(all_possible.get(0).get(forced_partial.get(1).getX()-1));
