@@ -388,6 +388,20 @@ public class BranchAndBound {
 
 		// Keep choosing and generating machine-task assignments until either the live nodes are exhausted or if all levels have been determined
 		while (liveNodes.size() != 0) {
+			
+			// Check that there is at least one valid child node
+			boolean checkChildren = false;
+			for (int p = 0; p < liveNodes.size(); p++) {
+				if (liveNodes.get(p).getCost() != -1) {
+					break;
+				}
+			}
+			if (checkChildren == false) {
+				this.assignments.clear();
+				messageBuilder();
+				return;
+			}
+			
 	
 			// Find a live node that is valid (the cost is not -1)
 			for (int i = 0; i < liveNodes.size(); i++) {
