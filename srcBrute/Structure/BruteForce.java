@@ -8,7 +8,8 @@ import IO.Parser;
 
 
 public class BruteForce{
-  private LinkedList<Pair<Integer,String>> forcedPartialAssignments;
+	
+	private LinkedList<Pair<Integer,String>> forcedPartialAssignments;
     private LinkedList<Pair<Integer,String>> forbiddenMachines;
     private LinkedList<Pair<String,String>> tooNearTasks;
     private LinkedList<LinkedList<Integer>> machinePenalties;

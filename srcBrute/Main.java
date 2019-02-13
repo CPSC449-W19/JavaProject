@@ -1,47 +1,37 @@
 import IO.Output;
 import IO.Parser;
-import Structure.*;
+import Structure.BruteForce;
 
 import java.io.File;
 import java.util.LinkedList;
 
+/**
+ * Driver for assignment
+ */
 public class Main {
 
     public static void main(String[] args) {
 
-
-        LinkedList<String> filesToRead = new LinkedList<>();
-        LinkedList<String> filesToWrite = new LinkedList<>();
-        if (args.length == 3) {
-            filesToRead.add(args[1]);
-            filesToWrite.add(args[2]);
-        } else {
-            File directory = new File("src/InputFiles");
-            File[] listOfFiles = directory.listFiles();
-            if (listOfFiles != null) {
-                for (File file : listOfFiles) {
-                    filesToRead.add(file.getName());
-                    filesToWrite.add(file.getName());
-                }
-            }
-        }
-
+        if (args.length != 2) {
+        	System.out.println("Invalid number of arguments.");
+            System.exit(0);
+        } 
+        
         Parser parser;
-        //BranchAndBound branchAndBound;
-        //Output output;
-        //for (String fileName : filesToRead) {
-            parser = new Parser("InputFiles/toonearpen1.txt",false);
-            //output = new Output("OutputFiles/machpen1.txt");
-          //  if (parser.isException()) {
-                //output.write(parser.getMessage());
-                //output.close();
-            //} else {
-                BruteForce bruteforce = new BruteForce(parser);
-                LinkedList<String> solution = bruteforce.findSolution();
-                bruteforce.solutiontoString(solution);
-                //output.write(branchAndBound.getMessage());
-                //output.close();
-            //}
-        //}
+        Output output;
+        parser = new Parser(args[0],false);
+        output = new Output(args[1]);
+        
+        if (parser.isException()) {
+             output.write(parser.getMessage());
+             output.close();
+         } else {
+             BruteForce bruteforce = new BruteForce(parser);
+             LinkedList<String> solution = bruteforce.findSolution();
+             output.write(bruteforce.solutiontoString(solution));
+             output.close();
+         }
+
     }
-}
+    
+} // End of Main
