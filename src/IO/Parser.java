@@ -19,7 +19,7 @@ import Structure.Pair;
  * file does not exist in the specified directory(src/InputFiles).  After the object is created the
  * Data from the file should be appropriately stored in the getter methods for external use.
  *
- * Note: Also see isException method to validate whether en exception was thrown by the parser from
+ * Note: Also see isException method to validate whether an exception was thrown by the parser from
  * a defined error.  Should only be possible for testing purposes (remove for final draft).
  *
  * @author Andrew Burton

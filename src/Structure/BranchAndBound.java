@@ -1,77 +1,83 @@
 package Structure;
 
-// Library imports
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+/* Library imports */
 import java.util.Comparator;
 import java.util.LinkedList;
-
-
 import IO.Parser;
 
-
 /**
- * BranchAndBound will use supplied penalty lists to determine the best possible machine-task assignment with lowest cost.
+ * BranchAndBound will solve an instance of the machine-task scheduling problem by using the branch and bound algorithm.
+ * It receives and initializes all of the constraints via Parser object that is passed into the BranchAndBound Constructor.
+ * Use the findSolution method to both calculate and output the solution.
  * 
  * @author Isha Afzaal
- * @since February 12, 2019
+ * @since February 2019
  */
 public class BranchAndBound {
 
-	// Constants
+	/* Constants */
 	private final int MAX_NUM = 8;
+	
+	// Penalty lists
 	private LinkedList<Pair<Integer,String>> forcedPartialAssignments;
     private LinkedList<Pair<Integer,String>> forbiddenMachines;
     private LinkedList<Pair<String,String>> tooNearTasks;
     private LinkedList<LinkedList<Integer>> machinePenalties;
     private LinkedList<Pair<Pair<String,String>,Integer>> tooNearPenalties;
+    
+    // Containers
     private LinkedList<Node> assignments = new LinkedList<>();
     private int totalCost = Integer.MAX_VALUE;
     private String message = "No valid solution possible!";
     private boolean debug;
-	private String location;
 
 	/**
-     * Constructor that sets all penalty lists
+     * Constructor that sets all penalty lists using an instance of Parser.
      */
-    public BranchAndBound ( Parser parser, boolean debug ) {
+	public BranchAndBound ( Parser parser, boolean debug ) {
 
-    	this.forcedPartialAssignments = parser.getForcedPartialAssignments();
-    	this.forbiddenMachines = parser.getForbiddenMachines();
-    	this.tooNearTasks = parser.getTooNearTasks();
-    	this.machinePenalties = parser.getMachinePenalties();
-    	this.tooNearPenalties = parser.getTooNearPenalties();
+		this.forcedPartialAssignments = parser.getForcedPartialAssignments();
+		this.forbiddenMachines = parser.getForbiddenMachines();
+		this.tooNearTasks = parser.getTooNearTasks();
+		this.machinePenalties = parser.getMachinePenalties();
+		this.tooNearPenalties = parser.getTooNearPenalties();
 		this.debug = debug;
+
     }
 
     /**
      * Getter for solution.
      */
     public LinkedList<Node> getAssignments(){
-			return assignments;
-		}
 
+    	return assignments;
+
+	}
 
 	/**
-	 * Create a node that assigns a given task to a given machine.
+	 * createNode will create a new Node instance that is instantiated using the passed in
+	 * machine, task, assigned and Node parent values.
 	 *
-	 * @return Node newNode that contains the assignment
+	 * @param boolean[] assigned is the task assignment array of the parent node. Given the parent's assignment array,
+	 *   createNode will copy the array and mark the new node's task as true to indicate that the given task is being
+	 *   assigned and becoming unavailable for future machines.
+	 * @return Node newNode that assigns to the given machine the task argument.
 	 */
 	public Node createNode (int machine, String task, boolean[] assigned, Node parent) {
 
-		// Initialize the node
+		// Create the new node instance
 		Node newNode = new Node();
-		newNode.setMachine(machine);
-		newNode.setTask(task);
 
 		// Update the new node's assignment matrix
 		boolean [] temp = new boolean[MAX_NUM];
 
+		// Copy the parent node's assignment matrix
 		for (int i = 0; i < MAX_NUM; i++) {
 			temp[i] = assigned[i];
 		}
 
-		if (task.compareTo("A") == 0) {		// Can probably optimize this
+		// Find the new node's task value and adjust the new assignment matrix to reflect the fact that the task is being assigned/taken
+		if (task.compareTo("A") == 0) {
 			temp[0] = true;
 		}
 		else if (task.compareTo("B") == 0) {
@@ -96,52 +102,40 @@ public class BranchAndBound {
 			temp[7] = true;
 		}
 
-		// Set the new node's initial values
+		// Fill the node's initial values and return
 		newNode.setParent(parent);
 		newNode.setTask(task);
 		newNode.setMachine(machine);
 		newNode.setAssigned(temp);
-
 		
-		// ***********DEBUG*********** //
-	/*	if (newNode.getMachine() > 5) {
-			
-			// Standard stuff
-			System.out.println("---- On Level " + Integer.toString(newNode.getMachine()) + " ----");
-			System.out.println("Task is " + newNode.getTask() + ".");
-			
-			// Check the assignment matrix
-			System.out.println("The assignment matrix:");
-			for (int i = 0; i < newNode.getAssigned().length; i++) {
-				
-				System.out.println(Integer.toString(i + 1) + " is set to " + newNode.getAssigned()[i] + ".");
-				
-			}
-		} */
-		// ********** END DEBUG ************ //
-		
+		debug("createNode", "newNode", newNode, 0);
 		return newNode;
-
+		
 	}
 
 	/**
-	 * Calculate the cost once the given node is assigned to the given task.  If the node is a
-	 * 	forbidden node then the return value will be -1.
-	 *
-	 * @return int penalty indicates the cost/penalty value of the desired assignment
+	 * calculatePenalty will determine the penalty value of the given Node node.
+	 * Algorithm: Check if the node violates any hard constraints.  If it does, return -1 to indicate a useless node.
+	 * 	Then, calculate the node's soft penalty values by using the machine penalty matrix and calculating the too-near task soft penalties.
+	 *  Finally, return the cost value.
+	 * 
+	 * @param Node node contains the machine-task assignment whose cost will be evaluated.
+	 * @return int cost will have a positive value if the given node has a valid machine-task assignment. Otherwise, it will be -1.
 	 */
 	public int calculatePenalty (Node node) {
 
-		// Cost will be set to -1 if the given node is a forbidden node assignment
 		int cost = 0;
 		Pair<Integer, String> currentCheck;
 
-		// Hard Constraint:  Check if the assignment fulfills the Forbidden Machines requirement
+		/* --- Hard Constraint #1: Forbidden Machines ---
+		 * If node assigns a machine machi to task taski for any i-pair in the forbidden machines
+		 * list, the node assignment is invalid and -1 will be returned. Otherwise, the cost value will not be changed from zero.
+		 */
 		for (int i = 0; i < forbiddenMachines.size(); i++) {
 
 			currentCheck = forbiddenMachines.get(i);
 
-			// If the current forbidden machine pair matches the given node, set cost to -1
+			// If the current forbidden machine pair matches the given node, return -1 for invalid assignment
 			if ( (currentCheck.getX() == node.getMachine()) && (currentCheck.getY().equals(node.getTask()) == true) ) {
 
 				return -1;
@@ -150,7 +144,11 @@ public class BranchAndBound {
 
 		}
 
-		// Hard Constraint:  Check if the assignment fulfills the Forced Partial Assignments requirement
+		/* --- Hard Constraint #2: Forced Partial Assignments ---
+		 * All (machine, task) assignments in the forced partial assignments list must be part of the solution.
+		 * For any machine machi in any pair in the list, if the given node has the same machine but assigns it a task other than
+		 * taski, the node assignment is invalid and -1 will be returned. Otherwise, the cost value will not be changed from zero.
+		 */
 		for (int j = 0; j < forcedPartialAssignments.size(); j++) {
 
 			currentCheck = forcedPartialAssignments.get(j);
@@ -161,7 +159,7 @@ public class BranchAndBound {
 				// Check if the node has the required task assigned to it
 				if (currentCheck.getY().equals(node.getTask()) == false) {
 
-					// The assignment is invalid if the tasks do not match, set the cost and return
+					// The assignment is invalid if the tasks do not match, return -1 for invalid assignment
 					return -1;
 
 				}
@@ -170,7 +168,11 @@ public class BranchAndBound {
 
 		}
 
-		// Hard Constraint:  Check if the assignment fulfills the Too-Near Tasks requirements
+		/* --- Hard Constraint #3: Too-Near Tasks --- 
+		 * Any node that, together with its parent, forms a consecutive pair that is present in the too-near tasks list is an invalid
+		 * assignment. In this case, node will be compared to task2, and if it matches, the node's parent will be compared to task1. If they
+		 * both match, then a too-near task pair has been found and -1 will be returned. Otherwise, the cost value will not be changed from zero.
+		 */
 		for (int k = 0; k < tooNearTasks.size(); k++) {
 
 			Pair<String, String> taskPair = tooNearTasks.get(k);
@@ -183,52 +185,28 @@ public class BranchAndBound {
 
 			}
 
-			// Check if the given node has the same task assigned to it as the current too-near task pair
+			// Else check if the given node has the same task assigned to it as the current too-near task pair's task2
 			else if (taskPair.getY().equals(node.getTask()) == true) {
 
-				// Check if the node's parent (the machine before) holds the first task in the pair
+				// Check if the node's parent (i.e. the machine before) holds the first task in the pair
 				if (node.getParent().getTask().equals(taskPair.getX()) == true) {
 
-					// The assignment is invalid, return error
+					// The assignment is invalid, return -1 for invalid assignment
 					return -1;
 
 				}
-
-			}
-			
-			// Check if machines 8 and 1 correspond to a penalty pair
-			else if (node.getMachine() == 8 && (taskPair.getX().equals(node.getTask()) == true) ) {
-							
-				// Iterate through the node's parents until we find machine 1
-				Node findMachineOne = node.getParent();
-				int countMachines = 0;
-							
-				// Use the counter variable to ensure termination of the loop
-				while ( (findMachineOne.getMachine() != 1) && (countMachines < 9) ) {
-								
-					findMachineOne = findMachineOne.getParent();
-					countMachines++;
-								
-				}
-							
-				// Check that we have successfully found machine 1
-				if (findMachineOne.getMachine() == 1 && (taskPair.getY().equals(findMachineOne.getTask()) == true) ) {
-								
-					// The assignment is invalid, return error
-					return -1;
-							
-				}
-
-				// DEBUG
-				System.out.println("In too near tasks hard.");
 
 			}
 	
 		}
 
-		// Soft Constraint:  Calculate the machine penalties from the given matrix
+		/* --- Soft Constraint #1: Machine Penalties ---
+		 * Using the machine penalty matrix, use the node's machine value to determine which penalty row to search in, and then
+		 * use its task value to determine which column to retrieve from.
+		 */
 		LinkedList<Integer> relevantPenaltyRow = null;
 
+		// Get the penalty row only if we are in a non-root node
 		if (node.getMachine() == -1) {
 			cost = 0;
 		}
@@ -236,6 +214,7 @@ public class BranchAndBound {
 			relevantPenaltyRow = machinePenalties.get(node.getMachine() - 1);
 		}
 
+		// Get the value in the row according to the task
 		if (node.getTask().equals("A") == true) {
 			cost = relevantPenaltyRow.get(0);
 		}
@@ -261,12 +240,16 @@ public class BranchAndBound {
 			cost = relevantPenaltyRow.get(7);
 		}
 
-		// Soft Constraint:  Calculate the too-near task penalties
+		/* --- Soft Constraint #2: Too-Near Task Penalties ---
+		 * Calculate whether the node and its parent form a too-near task penalty pair.
+		 * Iterate through each penalty pair and check, for each one, whether node and its parent match (task1, task2) for any pair i.
+		 * If they match, update the cost value using the last instance of the pair in the penalty list.
+		 */
 		LinkedList<Pair<Pair<String,String>, Integer>> pairsFound = new LinkedList<Pair<Pair<String,String>, Integer>>();
 		Pair<Pair<String, String>, Integer> currentTaskPair;
 		Pair<Pair<String, String>, Integer> temp;
-		int tooNearCost = 0;
 
+		// Iterate through each pair, looking for a match between (task1, task2) and (node's parent's task, node's task)
 		for (int l = 0; l < tooNearPenalties.size(); l++) {
 
 			currentTaskPair = tooNearPenalties.get(l);
@@ -284,7 +267,7 @@ public class BranchAndBound {
 
 				if (currentTaskPair.getX().getX().equals(node.getParent().getTask()) == true) {
 
-					// A match has been found.  Check if this pair has been found before
+					// A match has been found.  Check if this pair has been found before (to prevent repeated cost updates)
 					if (pairsFound.indexOf(currentTaskPair) == -1) {
 
 						// Add the current pair to the list of pairs that have been visited
@@ -293,7 +276,7 @@ public class BranchAndBound {
 						// Get the last occurrence of the pair
 						temp = tooNearPenalties.get(tooNearPenalties.lastIndexOf(currentTaskPair));
 
-						// Add in the near-task penalty
+						// Add the too-near penalty value to cost
 						cost += temp.getY();
 					}
 
@@ -301,10 +284,10 @@ public class BranchAndBound {
 
 			}
 			
-			// Check if machines 8 and 1 correspond to a penalty pair
+			// Check if machines 8 and 1 correspond to a penalty pair; (node's task, machine 1's task) will be compared to (task1, task2)
 			else if (node.getMachine() == 8 && (currentTaskPair.getX().getX().equals(node.getTask()) == true) ) {
 				
-				// Iterate through the node's parents until we find machine 1
+				// Iterate through the node's ancestors until we find machine 1
 				Node findMachineOne = node.getParent();
 				int countMachines = 0;
 				
@@ -316,7 +299,7 @@ public class BranchAndBound {
 					
 				}
 				
-				// Check that we have successfully found machine 1
+				// Check that we have successfully found machine 1 alongside checking for the pair
 				if (findMachineOne.getMachine() == 1 && (currentTaskPair.getX().getY().equals(findMachineOne.getTask()) == true) ) {
 					
 					// Then a pair has been found and the penalty value should be added if it has not been found before
@@ -328,11 +311,9 @@ public class BranchAndBound {
 						// Get the last occurrence of the pair
 						temp = tooNearPenalties.get(tooNearPenalties.lastIndexOf(currentTaskPair));
 						
-						// Add the near-task penalty
+						// Add the too-near penalty to cost
 						cost += temp.getY();
 
-						// DEBUG
-						System.out.println("In too near tasks soft.");
 					}
 					
 				}
@@ -340,65 +321,59 @@ public class BranchAndBound {
 			}
 
 		}
-		
-		
-		// ********** DEBUG ***********
-		if (node.getMachine() == 6) {
-			
-			// Print out the location
-			System.out.println("In calculatePenalty and on level 6 for machine 6");
-			
-			// Print out the task
-			System.out.println("We are on task " + node.getTask());
-			
-			// Print out the cost
-			System.out.println("With the cost " + Integer.toString(cost));
-			
-		}
-		
-		// *********** END DEBUG ************
 
+		debug("calculatePenalty", "possible live", node, cost);
 		return cost;
 
 	}
 
 	/**
-	 * Output the solution to a text file.
-	 *
-	 * @return String string that holds the solution.
+	 * outputSolution will take a leaf node and recursively trace its parent's and add each to the assignment/solution list.
 	 */
 	public void outputSolution (Node node) {
+		
 		// Check if the parent node is the dummy root node
 		if (node.getMachine() == -1) {
 			return;
 		}
 		
-		// DEBUG
-		System.out.println("DEBUG: Machine # " + Integer.toString(node.getMachine()) + " with task " + node.getTask() + " with cost " + Integer.toString(node.getCost()) + ".");
-
 		outputSolution(node.getParent());
-
+		debug("outputSolution", "assignment", node);
 		assignments.add(node);
 	}
 
+	/**
+	 * findCost will calculate the cost of a given assignment solution path.
+	 * 
+	 * @param Node node which is a leaf node of the solution.
+	 * @return int cost which will be calculated recursively.
+	 */
 	public int findCost(Node node) {
+		
+		debug("findCost");
+		
+		// Check if we have reached the dummy root node
 		if (node.getParent() == null) {
 			return node.getCost();
-		} else {
+		} 
+		else {
 			return node.getCost() + findCost(node.getParent());
 		}
+		
 	}
 
 	/**
-	 * Use the Branch and Bound algorithm to find the least-cost path.
+	 * findSolution solves an instance of the machine-task assignment problem.
+	 * Outline: Represent each machine in the solution as a level of a search tree, while unassigned tasks represent the number
+	 *   of nodes at each level. At each level, view each child (next machine's possible task assignments), pick the lowest cost
+	 *   and switch the active, live node to the chosen least-cost node and repeat. Run the algorithm until all levels have been reached.
 	 */
 	public void findSolution () {
 
-		// Create data structure to hold all live nodes
 		LinkedList<Node> liveNodes = new LinkedList<Node>();
 
-		// Create the dummy root node
-		boolean[] assigned = new boolean[MAX_NUM];			// Set all tasks to false by default, nothing has been assigned yet
+		// Create the root node; set all tasks to false by default since nothing has been assigned yet
+		boolean[] assigned = new boolean[MAX_NUM];
 		Node root = createNode(-1, " ", assigned, null);
 		root.setPathCost(0);
 		root.setCost(0);
@@ -406,25 +381,14 @@ public class BranchAndBound {
 		// Add the root to the list of live nodes
 		liveNodes.add(root);
 
-		// Placeholder variables
+		// leastNode is the active node that will be switched to the next machine's least costing assignment on each iteration
 		Node leastNode = null;
 		int leastIndex = 0;
 		int currentLevel = 0;
 
-		// Iterating through the live nodes now
+		// Keep choosing and generating machine-task assignments until either the live nodes are exhausted or if all levels have been determined
 		while (liveNodes.size() != 0) {
-
-			// ***** DEBUG ******** Iterate through the live nodes
-			Node test;
-			System.out.println("\n---- LIVE NODES -----");
-			for (int g = 0; g < liveNodes.size(); g++) {
-				test = liveNodes.get(g);
-				System.out.println("Machine " + Integer.toString(test.getMachine()) + " Task: " + test.getTask() + " Cost: " + Integer.toString(test.getCost()) + ".");
-			}
-			
-			
-			// ******* END DEBUG *********
-			
+	
 			// Find a live node that is valid (the cost is not -1)
 			for (int i = 0; i < liveNodes.size(); i++) {
 				if (liveNodes.get(i).getCost() != -1) {
@@ -434,18 +398,12 @@ public class BranchAndBound {
 				}
 			}
 			
-			// DEBUG
-			System.out.println("--- FOUND LEAST NODE ----");
-			System.out.println("Machine: " + Integer.toString(leastNode.getMachine()) + " Task: " + leastNode.getTask() + " Cost: " + Integer.toString(leastNode.getCost()) );
-
 			// Find the live node that has the least cost
 			for (int j = 0; j < liveNodes.size(); j++) {
 				
-				// DEBUG
-				System.out.println("---- FINDING LEAST NODE ----- ");
-				System.out.println("Live node current machine: " + Integer.toString(liveNodes.get(j).getMachine()) + " with task: " + liveNodes.get(j).getTask() + " with cost: " + Integer.toString(liveNodes.get(j).getCost() ) );
-
-				if ( (liveNodes.get(j).getCost() < leastNode.getCost() ) && (liveNodes.get(j).getCost() != -1) && (liveNodes.get(j).getMachine() == currentLevel) ) {
+				debug("findSolution", "liveNode", liveNodes.get(j));
+				
+				if ( (liveNodes.get(j).getCost() < leastNode.getCost() ) && (liveNodes.get(j).getCost() != -1) ) {
 
 					// If the current live node's cost value is valid and less than the current leastNode, update leastNode and its index
 					leastNode = liveNodes.get(j);
@@ -455,10 +413,8 @@ public class BranchAndBound {
 
 			}
 			
-			// DEBUG
-			System.out.println("----- CHOSEN LEAST NODE ----- ");
-			System.out.println("Chosen least node current machine: " + Integer.toString(leastNode.getMachine()) + " with task: " + leastNode.getTask() + " with cost: " + Integer.toString(leastNode.getCost() ) );
-
+			debug("findSolution", "leastNode", leastNode);
+			
 			// Remove the least node from the list of live nodes
 			liveNodes.remove(leastIndex);
 
@@ -470,7 +426,7 @@ public class BranchAndBound {
 				currentLevel = leastNode.getMachine() + 1;
 			}
 
-			// Check if we have assigned tasks to all machines
+			// Terminate program if we have assigned tasks to all machines
 			if (currentLevel > MAX_NUM) {
 
 				outputSolution(leastNode);
@@ -520,18 +476,13 @@ public class BranchAndBound {
 					int calc = calculatePenalty(nextMachine);
 					nextMachine.setCost(calc);
 
-					// Update the path cost for the new node only if the next assignment is valid
+					// Add the child to the list of liveNodes only if it has a valid, non-negative cost value
 					if (calc != -1) {
 
-						// Update the new assignment's path cost
+						// Update the new assignment's path cost and add it to liveNodes
 						nextMachine.setPathCost(leastNode.getPathCost() + calc);
-						
-						// DEBUG
-						System.out.println("----- ADDING CHILDREN -----");
-						System.out.println("Adding machine " + Integer.toString(nextMachine.getMachine()) + " with task " + nextMachine.getTask() + " with cost " + Integer.toString(nextMachine.getCost()) );
-
-						// Add the new machine to the list of live nodes
 						liveNodes.add(nextMachine);
+						debug("findSolution", "nextMachine", nextMachine);
 
 					}
 
@@ -539,23 +490,28 @@ public class BranchAndBound {
 
 			}
 			
-			// Remove all nodes that were on the previous level
+			// Remove all nodes that were on the previous level to prevent out-dated nodes from affecting the solution
 			LinkedList<Integer> removeThis = new LinkedList<Integer> ();
+			
+			// Find the indices to remove
 			for (int m = 0; m < liveNodes.size(); m++) {
 				if (liveNodes.get(m).getMachine() < currentLevel) {
 					removeThis.add(m);
 				}
 			}
 			
+			// Remove the old nodes from liveNodes
 			for (int n = 0; n < removeThis.size(); n++) {
-				System.out.println("---- REMOVING -----");
-				System.out.println("Removing machine " + Integer.toString(liveNodes.get(n).getMachine()) + " with the task " + liveNodes.get(n).getTask() + " and the cost " + Integer.toString(liveNodes.get(n).getCost()));
 				liveNodes.remove(n);
-				
 			}
-		}
+			
+		} // End of the liveNodes while-loop
+		
 	}
 
+	/**
+	 * messageBuilder will determine whether the calculated solution is valid. If it is, then it will be output.
+	 */
 	private void messageBuilder() {
 		if (assignments.size() != 8) this.message = "No valid solution possible!";
 		else {
@@ -566,16 +522,60 @@ public class BranchAndBound {
 		}
 	}
 
+	/**
+	 * Getter for message, used for debugging purposes.
+	 */
 	public String getMessage() {
 		return this.message;
 	}
 
+	/**
+	 * @Override
+	 * debug is used for logging and debugging purposes.
+	 */
 	private void debug(String message) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
-		if (isDebug()) System.err.println(String.format("%s [DEBUG] %s - %s", LocalDateTime.now().format(formatter),location,message));
+		if (isDebug()) {
+			System.out.println("BranchAndBound [DEBUG]: Currently in " + message + ".\n");
+		}
+	}
+	
+	/**
+	 * @Override
+	 * debug will be used for indicating run-time location and node values
+	 */
+	private void debug(String location, String type, Node node) {
+		
+		if (isDebug()) {
+			
+			System.out.println("BranchAndBound [DEBUG]: Currently in " + location + " with the " + type + " node. "
+					+ "The node's Machine: " + Integer.toString(node.getMachine()) + " assigned Task: " + node.getTask()
+					+ " with Cost: " + Integer.toString(node.getCost()) + ".\n");
+			
+		}
+		
 	}
 
+	/**
+	 * @Override
+	 * debug will be used when the node and cost are separate
+	 */
+	private void debug(String location, String type, Node node, int cost) {
+		
+		if (isDebug()) {
+			
+			System.out.println("BranchAndBound [DEBUG]: Currently in " + location + " with the " + type + " node. "
+					+ "The node's Machine: " + Integer.toString(node.getMachine()) + " assigned Task: " + node.getTask()
+					+ " with Cost: " + Integer.toString(cost) + ".\n");
+			
+		}
+		
+	}
+	
+	/**
+	 * Getter for the debug flag.
+	 */
 	public boolean isDebug() {
 		return this.debug;
 	}
+
 } // End of BranchAndBound
