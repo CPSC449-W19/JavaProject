@@ -19,7 +19,7 @@ import Structure.Pair;
  * file does not exist in the specified directory(src/InputFiles).  After the object is created the
  * Data from the file should be appropriately stored in the getter methods for external use.
  *
- * Note: Also see isException method to validate whether en exception was thrown by the parser from
+ * Note: Also see isException method to validate whether an exception was thrown by the parser from
  * a defined error.  Should only be possible for testing purposes (remove for final draft).
  *
  * @author Andrew Burton
@@ -34,6 +34,7 @@ public class Parser {
     private final boolean debug;
     private String location;
     private boolean exception = false;
+    private String message = "";
 
     // shared regular expressions
     private final String SECTION = "[\\s]*(Name:|(forced[\\s]+partial[\\s]+assignment:)|(forbidden[\\s]+machine:)|(too-near[\\s]+tasks:)|(machine[\\s]+penalties:)|(too-near penalities))[\\s]*";
@@ -104,9 +105,9 @@ public class Parser {
             debug("File Not Found - " + fileName);
             System.exit(-1);
         } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+            debug(exception.getMessage());
+            this.message = exception.getMessage();
             this.exception = true;
-            //System.exit(-1);
         }
         debug("RETURN");
     }
@@ -366,6 +367,10 @@ public class Parser {
 
     private boolean isDebug() {
         return this.debug;
+    }
+
+    public String getMessage() {
+        return this.message;
     }
 
     public String getName() {

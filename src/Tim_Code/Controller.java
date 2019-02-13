@@ -18,6 +18,7 @@ import java.awt.Desktop;
 import IO.*;
 import Structure.*;
 
+
 public class Controller {
 
 	static String fileInName;
@@ -40,18 +41,34 @@ public class Controller {
 	}
 
 	public static void main(String[] args) throws IOException {
-		if (args.length == 2) {
+		if (args.length == 3) {
 			fileInName = args[0];
 			fileOutName = args[1];
 
 			ourFileInName = args[0];
-			//ourFileOutName = args[2];
+			ourFileOutName = args[2];
 			readFile();
 			Tree t = new Tree(c);
 			t.traverseTree();
 			writeFile(null, t.printSolution());
 
+			Parser parser;
+			BranchAndBound branchAndBound;
+
+			parser = new Parser(ourFileInName,false);
+			Output output = new Output(ourFileOutName);
+			if (parser.isException()) {
+					output.write(parser.getMessage());
+					output.close();
+			} else {
+					branchAndBound = new BranchAndBound(parser, false);
+					branchAndBound.findSolution();
+					output.write(branchAndBound.getMessage());
+					output.close();
+			}
+
 			File file = new File(fileOutName);
+			File file1 = new File(ourFileOutName);
 
 	        //first check if Desktop is supported by Platform or not
 	        if(!Desktop.isDesktopSupported()){
@@ -61,13 +78,13 @@ public class Controller {
 
 	        Desktop desktop = Desktop.getDesktop();
 	        if(file.exists()) desktop.open(file);
+					if(file1.exists()) desktop.open(file);
 
-			Parser parser;
-			BranchAndBound branchAndBound;
 
-			parser = new Parser(ourFileInName,false);
-			branchAndBound = new BranchAndBound(parser, false);
-			branchAndBound.findSolution();
+
+
+
+
 
 		} else
 			System.out.println("Missing command line arguments for input and output file");
