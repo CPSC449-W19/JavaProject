@@ -29,8 +29,8 @@ public class Main {
         BranchAndBound branchAndBound;
         Output output;
         //for (String fileName : filesToRead) {
-            parser = new Parser("InputFiles/invalidforbidden.txt",false);
-            output = new Output("OutputFiles/invalidforbidden.txt");
+            parser = new Parser("InputFiles/nochoice2.txt",false);
+            output = new Output("OutputFiles/nochoice2.txt");
             if (parser.isException()) {
                 output.write(parser.getMessage());
                 output.close();

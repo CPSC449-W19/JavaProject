@@ -393,6 +393,7 @@ public class BranchAndBound {
 			boolean checkChildren = false;
 			for (int p = 0; p < liveNodes.size(); p++) {
 				if (liveNodes.get(p).getCost() != -1) {
+					checkChildren = true;
 					break;
 				}
 			}
@@ -505,19 +506,22 @@ public class BranchAndBound {
 			}
 			
 			// Remove all nodes that were on the previous level to prevent out-dated nodes from affecting the solution
-			LinkedList<Integer> removeThis = new LinkedList<Integer> ();
+			LinkedList<Node> removeThis = new LinkedList<Node> ();
 			
 			// Find the indices to remove
 			for (int m = 0; m < liveNodes.size(); m++) {
 				if (liveNodes.get(m).getMachine() < currentLevel) {
-					removeThis.add(m);
+					removeThis.add(liveNodes.get(m));
 				}
 			}
 			
 			// Remove the old nodes from liveNodes
 			for (int n = 0; n < removeThis.size(); n++) {
-				liveNodes.remove(n);
+				liveNodes.remove(removeThis.get(n));
 			}
+			
+			// Clear removeThis
+			removeThis.clear();
 			
 		} // End of the liveNodes while-loop
 		
