@@ -6,34 +6,27 @@ import java.util.Arrays;
 import IO.Parser;
 
 
-/**
- * BruteForce uses a brute force approach to solving a given instance of the machine-task assignment problem.
- * It receives all hard and soft constraints via Parser object that is passed into the BruteForce constructor.
- * Call the findSolution method to solve the machine-task assignment problem.
- * 
- * @author Elzanne Venter
- * @since February 2019
- */
+
 public class BruteForce{
 	
-	// Penalties
-	private LinkedList<Pair<Integer,String>> forcedPartialAssignments;
+    private LinkedList<Pair<Integer,String>> forcedPartialAssignments;
     private LinkedList<Pair<Integer,String>> forbiddenMachines;
     private LinkedList<Pair<String,String>> tooNearTasks;
     private LinkedList<LinkedList<Integer>> machinePenalties;
     private LinkedList<Pair<Pair<String,String>,Integer>> tooNearPenalties;
-  //  private boolean debug;
     LinkedList<LinkedList<String>> all_possible = new LinkedList<LinkedList<String>>();
     LinkedList<String> x = new LinkedList<String>();
 
+    //Containers
+    LinkedList<String> finalsolution = new LinkedList<>();
+    //LinkedList<LinkedList<String>> all_possible_solutions = new LinkedList<LinkedList<>>();
 
     private String [] tasks = {"A","B","C","D","E","F","G","H"};
     private int min_cost = Integer.MAX_VALUE;
 
-    /**
-     * Constructor.
-     * @param parser is used to initialize the penalty lists
-     */
+    //LinkedList<LinkedList<String>> all_possible = new LinkedList<LinkedList<String>>();
+
+// ************
     public BruteForce ( Parser parser) {
 
   		this.forcedPartialAssignments = parser.getForcedPartialAssignments();
@@ -44,41 +37,41 @@ public class BruteForce{
 
       }
 
-
-    /**
-     * Getter for all possible solutions.
-     */
+// ************
     public LinkedList<LinkedList<String>> getAllPossible(){
       return all_possible;
     }
 
-    
-    /**
-     * Create all possible solutions.
-     */
     public LinkedList<LinkedList<String>> createAll(){
         all_possible.clear();
         generateAll(tasks,8,0);
-        System.out.println(all_possible.size());
+        //System.out.println(all_possible.size());
+        //System.out.println(all_possible);
         return all_possible;
     }
 
+    // ****************
     
-    /**
-     * Generate all possible solutions. Should have 40320 permutations.
-     */
+    //REFERENCE: HEAP'S algorithm for finding all permutations
     public void generateAll(String[] tasks,int size, int count){
 
       if (size == 1){
         x = new LinkedList<String>();
         for (int i = 0; i<8; i++){
+          //System.out.print(tasks[i] + " ");
+
           x.add(tasks[i]);
+
+          //System.out.print(x);
+          //System.out.println(all_possible.size());
         }
         all_possible.add(x);
+          //all_possible.add(x);
       }
 
       for (int i = 0; i<size; i++){
         generateAll(tasks,size-1,count+1);
+        //all_possible.add(x);
 
         if (size%2 ==1){
           String temp = tasks[0];
@@ -92,13 +85,16 @@ public class BruteForce{
           tasks[size-1] = temp;
         }
       }
-
+      //System.out.println(all_possible.size());
+      //System.out.println();
+      //System.out.println(all_possible);
+      //System.out.println("done");
     }
+    
+  
+  // *************
 
-    /**
-     * hardConstraints_assignments 
-     */
-    public LinkedList<LinkedList<String>> hardConstraints_assignments (LinkedList<LinkedList<String>> all_possible
+    public LinkedList<LinkedList<String>> hardConstraints_assignments(LinkedList<LinkedList<String>> all_possible
     , LinkedList<Pair<Integer,String>> forced_partial, LinkedList<Pair<Integer,String>> forbidden){
 
       //System.out.println(all_possible.get(0).get(forced_partial.get(1).getX()-1));
@@ -144,20 +140,34 @@ public class BruteForce{
 
     public LinkedList<LinkedList<String>> hardConstraints_too_near(LinkedList<LinkedList<String>> all_possible,
     LinkedList<Pair<String,String>> too_near){
+
+      LinkedList<LinkedList<String>> newAllPossible = new LinkedList<LinkedList<String>>();
+
+      boolean partialSatisfied = true;
+
       for (int i = 0; i<too_near.size(); i++){
         Pair<String,String> current_too_near = too_near.get(i);
         for (int j = 0; j< all_possible.size(); j++){
           LinkedList<String> current_assignment = all_possible.get(j);
           for (int k = 0; k<current_assignment.size();k++){
-            if (current_assignment.get(k) == current_too_near.getX() && current_assignment.get(
-            (k+1)%8) == current_too_near.getY()){
-              all_possible.remove(j);
+            if (current_assignment.get(k).equals(current_too_near.getX()) && current_assignment.get(
+            (k+1)%8).equals(current_too_near.getY())){
+              partialSatisfied = false;
             }
+
+            }
+          System.out.println(partialSatisfied);
+          if (partialSatisfied == true) {
+            newAllPossible.add(current_assignment);
           }
+          else {
+            partialSatisfied = true;
         }
       }
+    }
 
-      return all_possible;
+      //System.out.println(newAllPossible);
+      return newAllPossible;
 
     }
 
@@ -226,9 +236,19 @@ public class BruteForce{
          all_solutions = hardConstraints_assignments(all_solutions,
          forcedPartialAssignments, forbiddenMachines);
 
-         all_solutions = hardConstraints_too_near(all_solutions,tooNearTasks);
+         //System.out.println(all_solutions);
+         //System.out.println();
 
-         System.out.println(all_solutions.size());
+         all_solutions = hardConstraints_too_near(all_solutions,tooNearTasks);
+          System.out.println(all_solutions);
+          
+         if (all_solutions.isEmpty()){
+           return new LinkedList<String> ();
+         }
+
+
+
+         //System.out.println(all_solutions.size());
 
          for (int i = 0; i< all_solutions.size(); i++){
            LinkedList<String> current_solution = all_solutions.get(i);
@@ -252,19 +272,28 @@ public class BruteForce{
 
 
        public String solutiontoString(LinkedList<String> solution){
-         String output = "Solution";
+         String output;
+         if (!solution.isEmpty()){
+
+
+         output = "Solution";
 
          for (int i = 0; i<solution.size();i++){
            output = output + " " + solution.get(i);
          }
 
          output = output + "; Quality: " + min_cost;
-         System.out.println(output);
+         //System.out.println(output);
          return output;
-
        }
 
+       else{
+         output = "No valid solution possible!";
+         //System.out.println(output);
+         return output;
+       }
 
+      }
 
 
 
